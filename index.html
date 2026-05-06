@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تجار ومصانع العراق</title>
+
+<!-- Google Verification -->
+<meta name="google-site-verification" content="gm0veH8eSchzqvFn1oLCotaR1c5RChvUw0d4bGPPIxo" />
+
+<style>
+body{margin:0;font-family:Tahoma;background:#f9f6f1}
+
+header{
+background:linear-gradient(90deg,#caa85a,#e6d3a3);
+padding:14px;
+display:flex;
+justify-content:space-between;
+color:#fff;font-weight:bold;
+}
+
+.searchBox{margin:10px}
+.searchBox input{width:100%;padding:14px;border:none;border-radius:20px;background:#fff}
+
+.categories{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+padding:10px;
+}
+
+.cat{
+background:#fff;
+border-radius:15px;
+text-align:center;
+padding:8px;
+box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+
+.cat img{width:100%;height:65px;object-fit:cover;border-radius:12px}
+
+.products{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+padding:10px 10px 80px;
+}
+
+.card{
+background:#fff;
+border-radius:15px;
+overflow:hidden;
+box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card img{width:100%;height:130px;object-fit:cover}
+.card .p{padding:10px}
+
+button{
+width:100%;
+padding:10px;
+background:#caa85a;
+color:#fff;
+border:none;
+border-radius:10px;
+margin-top:5px;
+}
+
+.nav{
+position:fixed;
+bottom:0;
+width:100%;
+background:#fff;
+display:flex;
+justify-content:space-around;
+padding:10px;
+}
+
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5)}
+.modal-box{background:#fff;margin:80px auto;padding:15px;border-radius:15px;width:90%;max-width:350px;position:relative}
+.modal-box input{width:100%;padding:12px;margin:5px 0;border-radius:10px;border:1px solid #ddd}
+.closeX{position:absolute;top:10px;left:10px;cursor:pointer}
+</style>
+</head>
+
+<body>
+
+<header>
+<div>تجار ومصانع العراق</div>
+<div onclick="openAdmin()">⚙️</div>
+</header>
+
+<div class="searchBox">
+<input id="search" placeholder="بحث..." onkeyup="render()">
+</div>
+
+<div class="categories">
+<div class="cat"><img src="https://images.unsplash.com/photo-1445205170230-053b83016050"></div>
+<div class="cat"><img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9"></div>
+<div class="cat"><img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa"></div>
+</div>
+
+<div class="products" id="list"></div>
+
+<!-- ADMIN -->
+<div id="adminBox" class="modal">
+<div class="modal-box">
+<div class="closeX" onclick="closeAdmin()">✖</div>
+
+<h3>إنشاء حساب تاجر</h3>
+<input id="a_user" placeholder="اسم الحساب">
+<input id="a_pass" placeholder="كلمة السر">
+<input id="a_name" placeholder="اسم المصنع">
+<button onclick="createSeller()">إنشاء</button>
+
+</div>
+</div>
+
+<!-- LOGIN -->
+<div id="sellerBox" class="modal">
+<div class="modal-box">
+<div class="closeX" onclick="sellerBox.style.display='none'">✖</div>
+
+<h3>حساب التاجر</h3>
+<input id="s_user" placeholder="اسم الحساب">
+<input id="s_pass" placeholder="كلمة السر">
+<button onclick="sellerLogin()">دخول</button>
+
+</div>
+</div>
+
+<!-- PRODUCT -->
+<div id="productBox" class="modal">
+<div class="modal-box">
+<div class="closeX" onclick="productBox.style.display='none'">✖</div>
+
+<h3>إضافة منتج</h3>
+<input id="pname" placeholder="اسم المنتج">
+<input id="pcat" placeholder="القسم">
+<input id="pdesc" placeholder="الوصف">
+<input id="pwa" placeholder="واتساب">
+<input type="file" id="pimg">
+<button onclick="addProduct()">نشر</button>
+
+</div>
+</div>
+
+<div class="nav">
+<div onclick="render()">🏠</div>
+<div onclick="sellerBox.style.display='block'">👤 حساب التاجر</div>
+<div onclick="openAdmin()">⚙️</div>
+<div onclick="logout()">🚪</div>
+</div>
+
+<script>
+
+/* ===== DATA ===== */
+let data = JSON.parse(localStorage.getItem("data")||"[]");
+let sellers = JSON.parse(localStorage.getItem("sellers")||"[]");
+let currentSeller = JSON.parse(localStorage.getItem("currentSeller")||"null");
+
+let ADMIN_PASS="12345";
+
+/* ===== ADMIN ===== */
+function openAdmin(){
+let pass=prompt("كلمة السر");
+if(pass===ADMIN_PASS) adminBox.style.display="block";
+else alert("خطأ");
+}
+function closeAdmin(){adminBox.style.display="none"}
+
+/* ===== CREATE SELLER ===== */
+function createSeller(){
+sellers.push({
+user:a_user.value,
+pass:a_pass.value,
+name:a_name.value
+});
+
+localStorage.setItem("sellers",JSON.stringify(sellers));
+alert("تم إنشاء التاجر");
+closeAdmin();
+}
+
+/* ===== LOGIN ===== */
+function sellerLogin(){
+let s = sellers.find(x =>
+x.user==s_user.value && x.pass==s_pass.value
+);
+
+if(s){
+currentSeller=s;
+localStorage.setItem("currentSeller",JSON.stringify(s));
+sellerBox.style.display="none";
+showSellerPanel();
+}else{
+alert("خطأ بالحساب");
+}
+}
+
+/* ===== SELLER PANEL ===== */
+function showSellerPanel(){
+
+let my = data.filter(x=>x.owner===currentSeller.user);
+
+list.innerHTML = `
+<h3>مرحباً ${currentSeller.name}</h3>
+<button onclick="productBox.style.display='block'">➕ إضافة منتج</button>
+<hr>
+`;
+
+my.forEach(p=>{
+list.innerHTML += `
+<div class="card">
+<img src="${p.img}">
+<div class="p">
+<b>${p.name}</b><br>
+<small>${p.desc}</small>
+
+<button onclick="deleteProduct(${p.id})">🗑️ حذف</button>
+
+</div>
+</div>`;
+});
+}
+
+/* ===== ADD PRODUCT ===== */
+function addProduct(){
+let file = pimg.files[0];
+let reader = new FileReader();
+
+reader.onload=function(e){
+
+data.push({
+id:Date.now(),
+name:pname.value,
+cat:pcat.value,
+desc:pdesc.value,
+wa:pwa.value,
+img:e.target.result,
+owner:currentSeller.user,
+factory:currentSeller.name
+});
+
+localStorage.setItem("data",JSON.stringify(data));
+productBox.style.display="none";
+showSellerPanel();
+};
+
+if(file) reader.readAsDataURL(file);
+}
+
+/* ===== DELETE ===== */
+function deleteProduct(id){
+data = data.filter(x=>x.id!=id);
+localStorage.setItem("data",JSON.stringify(data));
+showSellerPanel();
+}
+
+/* ===== RENDER ===== */
+function render(){
+let s = search.value.toLowerCase();
+list.innerHTML="";
+
+data.filter(x=>x.name.toLowerCase().includes(s))
+.forEach(x=>{
+
+list.innerHTML+=`
+<div class="card">
+<img src="${x.img}">
+<div class="p">
+<b>${x.name}</b><br>
+<small>${x.desc}</small><br>
+<small>${x.factory}</small><br>
+
+<a href="https://wa.me/${x.wa}">
+<button>واتساب</button>
+</a>
+
+</div>
+</div>
+`;
+});
+}
+
+/* ===== LOGOUT ===== */
+function logout(){
+currentSeller=null;
+localStorage.removeItem("currentSeller");
+render();
+}
+
+/* ===== START ===== */
+if(currentSeller){
+showSellerPanel();
+}else{
+render();
+}
+
+</script>
+
+</body>
+</html>
